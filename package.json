@@ -1,0 +1,14 @@
+{
+  "name": "hackathon-v2-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "AlphaS & GiMEL (For Hackaton 2023)",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "fastify": "^4.24.2"
+  }
+}

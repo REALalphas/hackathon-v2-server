@@ -50,17 +50,11 @@ app.get('/getstations/:lat/:lng', (req, res) => {
         delete record.Range
 
         return (numberInRange(record.Latitude, lat - 0.05, lat + 0.05)
-           && numberInRange(record.Longitude, lng - 0.05, lng + 0.05))
+            && numberInRange(record.Longitude, lng - 0.05, lng + 0.05))
     }).then((records) => {
         res.send(records)
-        console.log(records)
+        // console.log(records)
     })
-
-
-    //databaseConnection.findOne({ Radio: 'UMTS' })
-    //    .then((record) => {
-    //        res.send(record)
-    //    })
 })
 
 app.listen({

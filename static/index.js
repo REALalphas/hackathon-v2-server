@@ -1,14 +1,17 @@
+//const { geolocation } = require("@maptiler/sdk")
+
 maptilersdk.config.apiKey = 'U5L9BK8UnH7C2pZKrTlG'
 const map = new maptilersdk.Map({
     container: 'map',
     style: "streets-v2-dark",
-    // center: [36.2754, 54.5293],
-    zoom: 10,
-    geolocate: maptilersdk.GeolocationType.POINT
+    center: [36.2754, 54.5293], //Kaluga
+    zoom: 10
+    //geolocate: maptilersdk.GeolocationType.POINT
 })
 
 const Lat = 54.517791
 const Lng = 36.262724
+let userLocation = new maptilersdk.LngLat(36.262724, 54.517791)
 
 function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)) }
 let geoJSON = {
@@ -17,9 +20,10 @@ let geoJSON = {
 }
 
 const requestStations = async () => {
+    let distances = []
     axios({
         method: 'get',
-        url: 'http://localhost:3000/getstations/' + Lat + "/" + Lng,
+        url: 'http://localhost:3000/getstations/' + Lat + "/" + Lng, //Important! Set your's IP
         responseType: 'json',
         validateStatus: async (status) => {
             if (status != 200) {
@@ -30,7 +34,7 @@ const requestStations = async () => {
         }
     }).then((res) => {
         res.data.forEach(el => {
-            geoJSON.features.push({
+            geoJSON.features.push({ 
                 "type": "Feature",
                 "properties": {
                     "name": "aboba",
@@ -44,9 +48,11 @@ const requestStations = async () => {
                     ]
                 }
             },)
+            distances.push(new maptilersdk.LngLat(el.Longitude, el.Latitude).distanceTo(userLocation)) //Calculate minimal distance at user
         })
-        console.log(geoJSON)
+        // console.log(geoJSON)
         map.getSource('stations').setData(geoJSON)
+        console.log('MIN DISTANCE ' + Math.min.apply(Math, distances))
     })
 }
 
@@ -63,24 +69,8 @@ map.on('load', () => {
         type: 'circle',
         source: 'stations',
         paint: {
-            'circle-color': [
-                'step',
-                ['get', 'point_count'],
-                '#51bbd6',
-                25,
-                '#f1f075',
-                100,
-                '#f28cb1'
-            ],
-            'circle-radius': [
-                'step',
-                ['get', 'point_count'],
-                20,
-                25,
-                25,
-                100,
-                35
-            ]
+            'circle-color': ['step', ['get', 'point_count'], '#51bbd6', 25, '#f1f075', 100, '#f28cb1'],
+            'circle-radius': ['step', ['get', 'point_count'], 20, 25, 25, 100, 35]
         }
     })
     map.addLayer({ //Single point properties
@@ -88,21 +78,29 @@ map.on('load', () => {
         type: 'circle',
         source: 'stations',
         paint: {
-          'circle-color': '#fff',
-          'circle-radius': 8,
-          'circle-stroke-width': 1,
-          'circle-stroke-color': '#fff'
+            'circle-color': '#fff',
+            'circle-radius': 8,
+            'circle-stroke-width': 1,
+            'circle-stroke-color': '#fff'
         }
-      })
-      map.addLayer({ //Text on circles
+    })
+    map.addLayer({ //Text on circles
         id: 'cluster-count',
         type: 'symbol',
         source: 'stations',
         layout: {
-          'text-field': '{point_count_abbreviated}',
-          'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-          'text-size': 11
+            'text-field': '{point_count_abbreviated}',
+            'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+            'text-size': 11
         }
-      })
+    })
 })
+
+
+if ("geolocation" in navigator) { //Try to get location
+    navigator.geolocation.getCurrentPosition(function (position) {
+        userLocation = new maptilersdk.LngLat(position.coords.longitude, position.coords.latitude)
+    })
+}
+new maptilersdk.Marker().setLngLat(userLocation).addTo(map)
 requestStations()
